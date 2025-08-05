@@ -22,6 +22,255 @@ To mitigate this exposure and reduce volatility in realized returns, a modified 
 
 ---
 
+## **The Mechanics of the Calendar Spread**
+
+A **calendar spread** — also known as a time spread — involves taking offsetting positions in the same underlying asset across two different maturities. In commodities markets, this typically means going:
+
+- **Long the front (near-term) contract**
+- **Short the deferred (longer-term) contract**
+
+or vice versa, depending on the shape of the forward curve and expectations about how it will evolve. In a classic **carry strategy**, the trader seeks to capture the **implied yield** embedded in a contango curve, where future prices are above near-term prices. The basic position structure is:
+
+- **Long the front-month contract (or spot)**
+- **Short a later-dated future**
+
+This setup profits as the forward converges toward the spot price over time.
+
+### **Implied Carry Return**
+
+The theoretical return from this strategy derives from the forward curve slope. Let:
+
+- $F_0$: price of the deferred future  
+- $S_0$: spot or near-term future price  
+- $T$: time to maturity (in years)  
+
+Then the annualized implied return is:
+
+
+$$
+r_{\text{annual}} = \left( \frac{F_0}{S_0} \right)^{\frac{365}{T}} - 1
+$$
+
+This compounded return reflects what the trader would earn if the carry strategy were repeated continuously throughout the year, assuming no path dependency or capital withdrawal effects. This return also assumes the position is held to maturity and that no capital is forcibly withdrawn due to interim losses (e.g., margin calls).
+
+### **Execution Mechanics**
+
+In practice, calendar spreads are executed using exchange-traded futures. Each leg is margined separately, and marked-to-market (MTM) **daily**. Then the **compounded annualized return on capital deployed** is:
+
+$$
+r_{\text{capital}} = \left( \frac{F + m}{S_0 + m} \right)^{\frac{365}{T}} - 1
+$$
+
+This return reflects how margin directly affects capital efficiency. As $m$ increases, the denominator grows, and the return on capital shrinks — even if price differentials remain constant.
+
+
+- **Losses** on one leg require margin top-ups  
+- **Gains** on the other leg increase available collateral  
+
+This introduces **path dependency**: if prices move sharply in one direction, the losing leg may require cash injections **before** the position converges profitably. This dynamic can cause a divergence between **theoretical and realized** returns, especially in volatile or one-sided markets.
+
+
+
+---
+
+
+Because both legs of a futures spread are marked-to-market (MTM) daily, interim price movements impact capital allocation — even if the spread itself is profitable by expiration. Suppose the strategy is normalized to **1 contract per leg**, with:
+
+- $S_0$: initial spot or near-future price  
+- $F_0$: deferred future price  
+- $m = \frac{S_0}{M}$: margin required per contract (assumed a constant fraction of spot is required by the brokers)  
+- Initial capital: $S_0 + m$
+
+---
+
+#### **Scenario 1: General Price Levels Rise**
+
+When prices rise across the curve — i.e., $S_1 > S_0$ and $F_1 > F_0$ — the **short futures leg** incurs a loss, triggering a **margin call**. Assuming the market uses a daily mark-to-market (MTM) system (as is standard), this loss must be covered by **injecting additional cash**.
+
+We assume:
+
+- Initial number of contracts: 1 (normalized)  
+- Margin per contract: $m = \frac{S_0}{M}$  
+- Initial capital: $S_0 + m$  
+- New spot price: $S_1$  
+- New future price: $F_1$
+
+---
+
+##### Step 1: Compute the Margin Shortfall
+
+The trader is short one contract, and the futures price has increased:
+
+$$
+\text{Short leg loss} = F_1 - F_0
+$$
+
+To maintain the position, this amount must be deposited as additional margin:
+
+$$
+\text{Margin shortfall} = F_1 - F_0
+$$
+
+---
+
+##### Step 2: Sell Fraction $\alpha$ of the Long Side
+
+To avoid external capital injection, the trader sells a fraction $\alpha$ of the long position at price $S_1$. The proceeds are used to meet the margin shortfall:
+
+$$
+\alpha \cdot S_1 = F_1 - F_0
+$$
+
+Solving for $\alpha$:
+
+$$
+\alpha = \frac{F_1 - F_0}{S_1}
+$$
+
+This is the **minimum fraction of the long leg** that must be liquidated to maintain the short.
+
+---
+
+##### Step 3: Adjusted Return
+
+Originally, the strategy expected a final payoff of:
+
+$$
+\text{Gain}_{\text{original}} = 1 \cdot (F_0 + m)
+$$
+
+But now, with only $(1 - \alpha)$ contracts remaining, the payoff becomes:
+
+$$
+\text{Gain}_{\text{adjusted}} = (1 - \alpha) \cdot (F_0 + m)
+$$
+
+So the effective return is diluted due to the **forced deleveraging** under MTM pressure. Let the initial capital deployed be:
+
+$$
+\text{Capital}_{\text{initial}} = S_0 + m
+$$
+
+Then:
+
+- **Original return (no path dependency):**
+
+$$
+r_{\text{original}} = \frac{F_0 + m}{S_0 + m} - 1
+$$
+
+- **Diluted return (after selling $\alpha$ of the long leg):**
+
+$$
+r_{\text{diluted}} = \frac{(1 - \alpha)(F_0 + m)}{S_0 + m} - 1
+$$
+
+This shows how even a profitable spread can underperform due to forced deleveraging from mark-to-market losses on the short leg.
+
+#### **Scenario 2: General Price Levels Fall**
+
+When general price levels fall — i.e., $S_1 < S_0$ and $F_1 < F_0$ — the **short leg gains value**, and margin collateral is released. This **freed capital** can be used to scale up the strategy. Assume:
+
+- Original position: 1 contract per leg  
+- Margin per contract: $m = \frac{S_0}{M}$  
+- Capital per added contract:
+  - Buy long leg: $\alpha \cdot S_1$
+  - Margin for both legs: $ \cdot \alpha \cdot m =  \cdot \alpha \cdot \frac{S_0}{M}$
+- Total capital required per added pair:  
+  $$\alpha S_1 + \alpha \cdot \frac{S_0}{M}$$
+
+---
+
+##### Step 1: Freed Capital
+
+The gain on the short leg is:
+
+$$
+\text{Margin surplus} = F_0 - F_1
+$$
+
+This surplus is assumed fully reusable.
+
+---
+
+##### Step 2: Solve for $\alpha$
+
+We use the freed margin to fund new contracts:
+
+$$
+F_0 - F_1 = \alpha \cdot S_1 + \alpha \cdot \frac{S_0}{M}
+$$
+
+Solve for $\alpha$:
+
+$$
+\alpha = \frac{F_0 - F_1}{S_1 +  \cdot \frac{S_0}{M}}
+$$
+
+This is the number of **additional contracts** that can be opened with the cash released from MTM gains on the short leg. 
+
+---
+
+##### Step 3: Adjusted Gain
+
+The final number of contracts is:
+
+$$
+1 + \alpha
+$$
+
+Total payoff becomes:
+
+$$
+\text{Gain}_{\text{adjusted}} = (1 + \alpha)(F_0 + m)
+$$
+
+---
+
+##### Step 4: Return Comparison
+
+Initial capital (same as before):
+
+$$
+\text{Capital}_{\text{initial}} = S_0 + m
+$$
+
+Then:
+
+- **Original return (1 contract):**
+
+$$
+r_{\text{original}} = \frac{F_0 + m}{S_0 + m} - 1
+$$
+
+- **Boosted return (after scaling):**
+
+$$
+r_{\text{boosted}} = \frac{(1 + \alpha)(F_0 + m)}{S_0 + m} - 1
+$$
+
+This shows how early MTM profits free up margin that allows **leveraged scaling**, amplifying the effective return. The strategy becomes **convex**: it performs better when prices fall early, even though the long leg is losing money.
+
+### **Summary: Margin Dynamics and Path-Dependent Returns**
+
+| Scenario                  | Price Movement     | Margin Effect        | Trader Action              | Return Expression                                                                 | $\alpha$ Expression                                                                 | $\alpha$ Sign |
+|---------------------------|--------------------|-----------------------|----------------------------|------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------|----------------|
+| 1. Price ↑ (Unfavorable)  | $S_1 > S_0$, $F_1 > F_0$ | Margin call on short  | Sell $\alpha$ of long leg  | $r_{\text{diluted}} = \frac{(1 - \alpha)(F_0 + m)}{S_0 + m} - 1$                  | $\alpha = \frac{F_1 - F_0}{S_1}$                                                     | Positive       |
+| 2. Price ↓ (Favorable)    | $S_1 < S_0$, $F_1 < F_0$ | Freed margin from short | Add $\alpha$ new contracts | $r_{\text{boosted}} = \frac{(1 + \alpha)(F_0 + m)}{S_0 + m} - 1$                  | $\alpha = \frac{F_0 - F_1}{S_1 +   \frac{S_0}{M}}$                             | Positive       |
+
+
+
+These outcomes show that while **carry logic is symmetric**, the **realized return is long** in price movements — because of how margin flows alter effective exposure.
+
+
+
+
+
+
+
+
+
+
 ## **Visualizing the Forward Curve**
 
 ```{python}

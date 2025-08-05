@@ -104,6 +104,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   }
 }</script>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 <link rel="stylesheet" href="../styles.css">
 </head>
@@ -186,9 +215,255 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>To mitigate this exposure and reduce volatility in realized returns, a modified strategy involves holding an additional long position further along the curve. This acts as a natural hedge against upward shifts in the forward curve, smoothing P&amp;L fluctuations and aligning realized performance more closely with the initial implied rate. The result is a more robust, convex strategy that stabilizes capital efficiency while preserving the core carry logic.</p>
 <hr>
 </section>
+<section id="the-mechanics-of-the-calendar-spread" class="level2">
+<h2 class="anchored" data-anchor-id="the-mechanics-of-the-calendar-spread"><strong>The Mechanics of the Calendar Spread</strong></h2>
+<p>A <strong>calendar spread</strong> — also known as a time spread — involves taking offsetting positions in the same underlying asset across two different maturities. In commodities markets, this typically means going:</p>
+<ul>
+<li><strong>Long the front (near-term) contract</strong></li>
+<li><strong>Short the deferred (longer-term) contract</strong></li>
+</ul>
+<p>or vice versa, depending on the shape of the forward curve and expectations about how it will evolve. In a classic <strong>carry strategy</strong>, the trader seeks to capture the <strong>implied yield</strong> embedded in a contango curve, where future prices are above near-term prices. The basic position structure is:</p>
+<ul>
+<li><strong>Long the front-month contract (or spot)</strong></li>
+<li><strong>Short a later-dated future</strong></li>
+</ul>
+<p>This setup profits as the forward converges toward the spot price over time.</p>
+<section id="implied-carry-return" class="level3">
+<h3 class="anchored" data-anchor-id="implied-carry-return"><strong>Implied Carry Return</strong></h3>
+<p>The theoretical return from this strategy derives from the forward curve slope. Let:</p>
+<ul>
+<li><span class="math inline">\(F_0\)</span>: price of the deferred future<br>
+</li>
+<li><span class="math inline">\(S_0\)</span>: spot or near-term future price<br>
+</li>
+<li><span class="math inline">\(T\)</span>: time to maturity (in years)</li>
+</ul>
+<p>Then the annualized implied return is:</p>
+<p><span class="math display">\[
+r_{\text{annual}} = \left( \frac{F_0}{S_0} \right)^{\frac{365}{T}} - 1
+\]</span></p>
+<p>This compounded return reflects what the trader would earn if the carry strategy were repeated continuously throughout the year, assuming no path dependency or capital withdrawal effects. This return also assumes the position is held to maturity and that no capital is forcibly withdrawn due to interim losses (e.g., margin calls).</p>
+</section>
+<section id="execution-mechanics" class="level3">
+<h3 class="anchored" data-anchor-id="execution-mechanics"><strong>Execution Mechanics</strong></h3>
+<p>In practice, calendar spreads are executed using exchange-traded futures. Each leg is margined separately, and marked-to-market (MTM) <strong>daily</strong>. Then the <strong>compounded annualized return on capital deployed</strong> is:</p>
+<p><span class="math display">\[
+r_{\text{capital}} = \left( \frac{F + m}{S_0 + m} \right)^{\frac{365}{T}} - 1
+\]</span></p>
+<p>This return reflects how margin directly affects capital efficiency. As <span class="math inline">\(m\)</span> increases, the denominator grows, and the return on capital shrinks — even if price differentials remain constant.</p>
+<ul>
+<li><strong>Losses</strong> on one leg require margin top-ups<br>
+</li>
+<li><strong>Gains</strong> on the other leg increase available collateral</li>
+</ul>
+<p>This introduces <strong>path dependency</strong>: if prices move sharply in one direction, the losing leg may require cash injections <strong>before</strong> the position converges profitably. This dynamic can cause a divergence between <strong>theoretical and realized</strong> returns, especially in volatile or one-sided markets.</p>
+<hr>
+<p>Because both legs of a futures spread are marked-to-market (MTM) daily, interim price movements impact capital allocation — even if the spread itself is profitable by expiration. Suppose the strategy is normalized to <strong>1 contract per leg</strong>, with:</p>
+<ul>
+<li><span class="math inline">\(S_0\)</span>: initial spot or near-future price<br>
+</li>
+<li><span class="math inline">\(F_0\)</span>: deferred future price<br>
+</li>
+<li><span class="math inline">\(m = \frac{S_0}{M}\)</span>: margin required per contract (assumed a constant fraction of spot is required by the brokers)<br>
+</li>
+<li>Initial capital: <span class="math inline">\(S_0 + m\)</span></li>
+</ul>
+<hr>
+<section id="scenario-1-general-price-levels-rise" class="level4">
+<h4 class="anchored" data-anchor-id="scenario-1-general-price-levels-rise"><strong>Scenario 1: General Price Levels Rise</strong></h4>
+<p>When prices rise across the curve — i.e., <span class="math inline">\(S_1 &gt; S_0\)</span> and <span class="math inline">\(F_1 &gt; F_0\)</span> — the <strong>short futures leg</strong> incurs a loss, triggering a <strong>margin call</strong>. Assuming the market uses a daily mark-to-market (MTM) system (as is standard), this loss must be covered by <strong>injecting additional cash</strong>.</p>
+<p>We assume:</p>
+<ul>
+<li>Initial number of contracts: 1 (normalized)<br>
+</li>
+<li>Margin per contract: <span class="math inline">\(m = \frac{S_0}{M}\)</span><br>
+</li>
+<li>Initial capital: <span class="math inline">\(S_0 + m\)</span><br>
+</li>
+<li>New spot price: <span class="math inline">\(S_1\)</span><br>
+</li>
+<li>New future price: <span class="math inline">\(F_1\)</span></li>
+</ul>
+<hr>
+<section id="step-1-compute-the-margin-shortfall" class="level5">
+<h5 class="anchored" data-anchor-id="step-1-compute-the-margin-shortfall">Step 1: Compute the Margin Shortfall</h5>
+<p>The trader is short one contract, and the futures price has increased:</p>
+<p><span class="math display">\[
+\text{Short leg loss} = F_1 - F_0
+\]</span></p>
+<p>To maintain the position, this amount must be deposited as additional margin:</p>
+<p><span class="math display">\[
+\text{Margin shortfall} = F_1 - F_0
+\]</span></p>
+<hr>
+</section>
+<section id="step-2-sell-fraction-alpha-of-the-long-side" class="level5">
+<h5 class="anchored" data-anchor-id="step-2-sell-fraction-alpha-of-the-long-side">Step 2: Sell Fraction <span class="math inline">\(\alpha\)</span> of the Long Side</h5>
+<p>To avoid external capital injection, the trader sells a fraction <span class="math inline">\(\alpha\)</span> of the long position at price <span class="math inline">\(S_1\)</span>. The proceeds are used to meet the margin shortfall:</p>
+<p><span class="math display">\[
+\alpha \cdot S_1 = F_1 - F_0
+\]</span></p>
+<p>Solving for <span class="math inline">\(\alpha\)</span>:</p>
+<p><span class="math display">\[
+\alpha = \frac{F_1 - F_0}{S_1}
+\]</span></p>
+<p>This is the <strong>minimum fraction of the long leg</strong> that must be liquidated to maintain the short.</p>
+<hr>
+</section>
+<section id="step-3-adjusted-return" class="level5">
+<h5 class="anchored" data-anchor-id="step-3-adjusted-return">Step 3: Adjusted Return</h5>
+<p>Originally, the strategy expected a final payoff of:</p>
+<p><span class="math display">\[
+\text{Gain}_{\text{original}} = 1 \cdot (F_0 + m)
+\]</span></p>
+<p>But now, with only <span class="math inline">\((1 - \alpha)\)</span> contracts remaining, the payoff becomes:</p>
+<p><span class="math display">\[
+\text{Gain}_{\text{adjusted}} = (1 - \alpha) \cdot (F_0 + m)
+\]</span></p>
+<p>So the effective return is diluted due to the <strong>forced deleveraging</strong> under MTM pressure. Let the initial capital deployed be:</p>
+<p><span class="math display">\[
+\text{Capital}_{\text{initial}} = S_0 + m
+\]</span></p>
+<p>Then:</p>
+<ul>
+<li><strong>Original return (no path dependency):</strong></li>
+</ul>
+<p><span class="math display">\[
+r_{\text{original}} = \frac{F_0 + m}{S_0 + m} - 1
+\]</span></p>
+<ul>
+<li><strong>Diluted return (after selling <span class="math inline">\(\alpha\)</span> of the long leg):</strong></li>
+</ul>
+<p><span class="math display">\[
+r_{\text{diluted}} = \frac{(1 - \alpha)(F_0 + m)}{S_0 + m} - 1
+\]</span></p>
+<p>This shows how even a profitable spread can underperform due to forced deleveraging from mark-to-market losses on the short leg.</p>
+</section>
+</section>
+<section id="scenario-2-general-price-levels-fall" class="level4">
+<h4 class="anchored" data-anchor-id="scenario-2-general-price-levels-fall"><strong>Scenario 2: General Price Levels Fall</strong></h4>
+<p>When general price levels fall — i.e., <span class="math inline">\(S_1 &lt; S_0\)</span> and <span class="math inline">\(F_1 &lt; F_0\)</span> — the <strong>short leg gains value</strong>, and margin collateral is released. This <strong>freed capital</strong> can be used to scale up the strategy. Assume:</p>
+<ul>
+<li>Original position: 1 contract per leg<br>
+</li>
+<li>Margin per contract: <span class="math inline">\(m = \frac{S_0}{M}\)</span><br>
+</li>
+<li>Capital per added contract:
+<ul>
+<li>Buy long leg: <span class="math inline">\(\alpha \cdot S_1\)</span></li>
+<li>Margin for both legs: $ m = $</li>
+</ul></li>
+<li>Total capital required per added pair:<br>
+<span class="math display">\[\alpha S_1 + \alpha \cdot \frac{S_0}{M}\]</span></li>
+</ul>
+<hr>
+<section id="step-1-freed-capital" class="level5">
+<h5 class="anchored" data-anchor-id="step-1-freed-capital">Step 1: Freed Capital</h5>
+<p>The gain on the short leg is:</p>
+<p><span class="math display">\[
+\text{Margin surplus} = F_0 - F_1
+\]</span></p>
+<p>This surplus is assumed fully reusable.</p>
+<hr>
+</section>
+<section id="step-2-solve-for-alpha" class="level5">
+<h5 class="anchored" data-anchor-id="step-2-solve-for-alpha">Step 2: Solve for <span class="math inline">\(\alpha\)</span></h5>
+<p>We use the freed margin to fund new contracts:</p>
+<p><span class="math display">\[
+F_0 - F_1 = \alpha \cdot S_1 + \alpha \cdot \frac{S_0}{M}
+\]</span></p>
+<p>Solve for <span class="math inline">\(\alpha\)</span>:</p>
+<p><span class="math display">\[
+\alpha = \frac{F_0 - F_1}{S_1 +  \cdot \frac{S_0}{M}}
+\]</span></p>
+<p>This is the number of <strong>additional contracts</strong> that can be opened with the cash released from MTM gains on the short leg.</p>
+<hr>
+</section>
+<section id="step-3-adjusted-gain" class="level5">
+<h5 class="anchored" data-anchor-id="step-3-adjusted-gain">Step 3: Adjusted Gain</h5>
+<p>The final number of contracts is:</p>
+<p><span class="math display">\[
+1 + \alpha
+\]</span></p>
+<p>Total payoff becomes:</p>
+<p><span class="math display">\[
+\text{Gain}_{\text{adjusted}} = (1 + \alpha)(F_0 + m)
+\]</span></p>
+<hr>
+</section>
+<section id="step-4-return-comparison" class="level5">
+<h5 class="anchored" data-anchor-id="step-4-return-comparison">Step 4: Return Comparison</h5>
+<p>Initial capital (same as before):</p>
+<p><span class="math display">\[
+\text{Capital}_{\text{initial}} = S_0 + m
+\]</span></p>
+<p>Then:</p>
+<ul>
+<li><strong>Original return (1 contract):</strong></li>
+</ul>
+<p><span class="math display">\[
+r_{\text{original}} = \frac{F_0 + m}{S_0 + m} - 1
+\]</span></p>
+<ul>
+<li><strong>Boosted return (after scaling):</strong></li>
+</ul>
+<p><span class="math display">\[
+r_{\text{boosted}} = \frac{(1 + \alpha)(F_0 + m)}{S_0 + m} - 1
+\]</span></p>
+<p>This shows how early MTM profits free up margin that allows <strong>leveraged scaling</strong>, amplifying the effective return. The strategy becomes <strong>convex</strong>: it performs better when prices fall early, even though the long leg is losing money.</p>
+</section>
+</section>
+</section>
+<section id="summary-margin-dynamics-and-path-dependent-returns" class="level3">
+<h3 class="anchored" data-anchor-id="summary-margin-dynamics-and-path-dependent-returns"><strong>Summary: Margin Dynamics and Path-Dependent Returns</strong></h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 9%">
+<col style="width: 7%">
+<col style="width: 8%">
+<col style="width: 9%">
+<col style="width: 29%">
+<col style="width: 30%">
+<col style="width: 5%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Scenario</th>
+<th>Price Movement</th>
+<th>Margin Effect</th>
+<th>Trader Action</th>
+<th>Return Expression</th>
+<th><span class="math inline">\(\alpha\)</span> Expression</th>
+<th><span class="math inline">\(\alpha\)</span> Sign</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1. Price ↑ (Unfavorable)</td>
+<td><span class="math inline">\(S_1 &gt; S_0\)</span>, <span class="math inline">\(F_1 &gt; F_0\)</span></td>
+<td>Margin call on short</td>
+<td>Sell <span class="math inline">\(\alpha\)</span> of long leg</td>
+<td><span class="math inline">\(r_{\text{diluted}} = \frac{(1 - \alpha)(F_0 + m)}{S_0 + m} - 1\)</span></td>
+<td><span class="math inline">\(\alpha = \frac{F_1 - F_0}{S_1}\)</span></td>
+<td>Positive</td>
+</tr>
+<tr class="even">
+<td>2. Price ↓ (Favorable)</td>
+<td><span class="math inline">\(S_1 &lt; S_0\)</span>, <span class="math inline">\(F_1 &lt; F_0\)</span></td>
+<td>Freed margin from short</td>
+<td>Add <span class="math inline">\(\alpha\)</span> new contracts</td>
+<td><span class="math inline">\(r_{\text{boosted}} = \frac{(1 + \alpha)(F_0 + m)}{S_0 + m} - 1\)</span></td>
+<td><span class="math inline">\(\alpha = \frac{F_0 - F_1}{S_1 +   \frac{S_0}{M}}\)</span></td>
+<td>Positive</td>
+</tr>
+</tbody>
+</table>
+<p>These outcomes show that while <strong>carry logic is symmetric</strong>, the <strong>realized return is long</strong> in price movements — because of how margin flows alter effective exposure.</p>
+</section>
+</section>
 <section id="visualizing-the-forward-curve" class="level2">
 <h2 class="anchored" data-anchor-id="visualizing-the-forward-curve"><strong>Visualizing the Forward Curve</strong></h2>
-<div id="28679bf2" class="cell" data-execution_count="1">
+<div id="c2da66f5" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Data for the forward curve</span></span>
