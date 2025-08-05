@@ -1,0 +1,37 @@
+[
+  {
+    "objectID": "quant-blog.html",
+    "href": "quant-blog.html",
+    "title": "quant-blog",
+    "section": "",
+    "text": "Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see https://quarto.org."
+  },
+  {
+    "objectID": "quant-blog.html#quarto",
+    "href": "quant-blog.html#quarto",
+    "title": "quant-blog",
+    "section": "",
+    "text": "Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see https://quarto.org."
+  },
+  {
+    "objectID": "posts/sample-post.html",
+    "href": "posts/sample-post.html",
+    "title": "Exploring Calendar Spreads in Energy Markets",
+    "section": "",
+    "text": "In forward curve trading, a classic carry strategy involves going long on the spot market while simultaneously shorting a future contract, thereby capturing the implied rate of return as the forward converges to the spot at maturity. This implied return reflects the embedded interest rate in the term structure of the forward curve.\nHowever, mark-to-market dynamics introduce a key source of path dependency. When general price levels rise, the short futures leg becomes loss-making, potentially triggering margin calls. Traders must then inject capital or unwind part of the position, leading to a realized return that diverges from the originally implied yield.\nConversely, if price levels fall, margin balances become cashflow-positive, enabling position scaling and potentially increasing the strategy’s effective return. This asymmetric cashflow exposure makes the anticipated portfolio return sensitive to shifts in the absolute level of the forward curve — i.e., it becomes long-biased in curve level.\nTo mitigate this exposure and reduce volatility in realized returns, a modified strategy involves holding an additional long position further along the curve. This acts as a natural hedge against upward shifts in the forward curve, smoothing P&L fluctuations and aligning realized performance more closely with the initial implied rate. The result is a more robust, convex strategy that stabilizes capital efficiency while preserving the core carry logic."
+  },
+  {
+    "objectID": "posts/sample-post.html#abstract",
+    "href": "posts/sample-post.html#abstract",
+    "title": "Exploring Calendar Spreads in Energy Markets",
+    "section": "",
+    "text": "In forward curve trading, a classic carry strategy involves going long on the spot market while simultaneously shorting a future contract, thereby capturing the implied rate of return as the forward converges to the spot at maturity. This implied return reflects the embedded interest rate in the term structure of the forward curve.\nHowever, mark-to-market dynamics introduce a key source of path dependency. When general price levels rise, the short futures leg becomes loss-making, potentially triggering margin calls. Traders must then inject capital or unwind part of the position, leading to a realized return that diverges from the originally implied yield.\nConversely, if price levels fall, margin balances become cashflow-positive, enabling position scaling and potentially increasing the strategy’s effective return. This asymmetric cashflow exposure makes the anticipated portfolio return sensitive to shifts in the absolute level of the forward curve — i.e., it becomes long-biased in curve level.\nTo mitigate this exposure and reduce volatility in realized returns, a modified strategy involves holding an additional long position further along the curve. This acts as a natural hedge against upward shifts in the forward curve, smoothing P&L fluctuations and aligning realized performance more closely with the initial implied rate. The result is a more robust, convex strategy that stabilizes capital efficiency while preserving the core carry logic."
+  },
+  {
+    "objectID": "posts/sample-post.html#visualizing-the-forward-curve",
+    "href": "posts/sample-post.html#visualizing-the-forward-curve",
+    "title": "Exploring Calendar Spreads in Energy Markets",
+    "section": "Visualizing the Forward Curve",
+    "text": "Visualizing the Forward Curve\n\nimport matplotlib.pyplot as plt\n\n# Data for the forward curve\nmaturities = [0, 4, 6, 9]\nprices = [54000, 65000, 75000, 85000]\n\n# Create plot\nplt.figure(figsize=(8, 5))\nplt.plot(maturities, prices, marker='o', linewidth=2)\nplt.title(\"Forward Curve\")\nplt.xlabel(\"Maturity (Months)\")\nplt.ylabel(\"Price\")\nplt.grid(True)\nplt.tight_layout()\nplt.show()"
+  }
+]
