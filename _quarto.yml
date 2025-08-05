@@ -1,0 +1,20 @@
+project:
+  type: website
+
+execute:
+  engine: jupyter
+
+website:
+  title: "Quant Blog" 
+  navbar:
+    right:
+     
+      - text: "GitHub"
+        href: https://github.com/YOUR_USERNAME
+      - icon: twitter
+        href: https://twitter.com/YOUR_HANDLE
+
+format:
+  html:
+    theme: cosmo
+    css: styles.css

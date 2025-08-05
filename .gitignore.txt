@@ -1,0 +1,7 @@
+_quarto
+*.ipynb
+*.Rproj
+.DS_Store
+*.pyc
+__pycache__/
+.env

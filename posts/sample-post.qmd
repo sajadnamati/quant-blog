@@ -1,0 +1,43 @@
+---
+title: "Exploring Calendar Spreads in Energy Markets"
+date: 2025-08-04
+categories: [trading, derivatives]
+format:
+  html: 
+    
+    echo: true            # display code by default
+    fig-cap-location: top # optional: keep captions above figures
+jupyter: python3    
+---
+
+## **Abstract**
+
+In forward curve trading, a classic carry strategy involves going long on the spot market while simultaneously shorting a future contract, thereby capturing the implied rate of return as the forward converges to the spot at maturity. This implied return reflects the embedded interest rate in the term structure of the forward curve.
+
+However, mark-to-market dynamics introduce a key source of path dependency. When general price levels rise, the short futures leg becomes loss-making, potentially triggering margin calls. Traders must then inject capital or unwind part of the position, leading to a realized return that diverges from the originally implied yield.
+
+Conversely, if price levels fall, margin balances become cashflow-positive, enabling position scaling and potentially increasing the strategy's effective return. This asymmetric cashflow exposure makes the anticipated portfolio return sensitive to shifts in the absolute level of the forward curve — i.e., it becomes long-biased in curve level.
+
+To mitigate this exposure and reduce volatility in realized returns, a modified strategy involves holding an additional long position further along the curve. This acts as a natural hedge against upward shifts in the forward curve, smoothing P&L fluctuations and aligning realized performance more closely with the initial implied rate. The result is a more robust, convex strategy that stabilizes capital efficiency while preserving the core carry logic.
+
+---
+
+## **Visualizing the Forward Curve**
+
+```{python}
+import matplotlib.pyplot as plt
+
+# Data for the forward curve
+maturities = [0, 4, 6, 9]
+prices = [54000, 65000, 75000, 85000]
+
+# Create plot
+plt.figure(figsize=(8, 5))
+plt.plot(maturities, prices, marker='o', linewidth=2)
+plt.title("Forward Curve")
+plt.xlabel("Maturity (Months)")
+plt.ylabel("Price")
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+```
