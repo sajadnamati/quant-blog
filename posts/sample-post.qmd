@@ -379,23 +379,24 @@ dropdown_buttons = [
     for i, beta in enumerate(beta_values)
 ]
 
-# Layout and dropdown
 fig.update_layout(
-    updatemenus=[{
-        "buttons": dropdown_buttons,
-        "direction": "down",
-        "showactive": True,
-        "x": 0.5,
-        "xanchor": "left",
-        "y": 1.15,
-        "yanchor": "top"
-    }],
+    updatemenus=[
+        {
+            "buttons": dropdown_buttons,
+            "direction": "down",
+            "showactive": True,
+            "x": 0.5,
+            "xanchor": "center",
+            "y": -0.25,  # BELOW the chart
+            "yanchor": "top"
+        }
+    ],
     title="Hedged vs. Unhedged Adjusted Return (β = 50%)",
     xaxis_title="Return Shock (%)",
     yaxis_title="Portfolio Return (%)",
     legend_title="Strategy",
     height=500
-) 
+)
 
 fig.show()     
 ```
