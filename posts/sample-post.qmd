@@ -83,194 +83,322 @@ Because both legs of a futures spread are marked-to-market (MTM) daily, interim 
 
 ---
 
-#### **Scenario 1: General Price Levels Rise**
+### **Capital-Constrained Position Adjustment**
 
-When prices rise across the curve — i.e., $S_1 > S_0$ and $F_1 > F_0$ — the **short futures leg** incurs a loss, triggering a **margin call**. Assuming the market uses a daily mark-to-market (MTM) system (as is standard), this loss must be covered by **injecting additional cash**.
+We now derive how the number of contracts adjusts after any price movement, based purely on capital accounting.
 
-We assume:
+Let:
 
-- Initial number of contracts: 1 (normalized)  
-- Margin per contract: $m = \frac{S_0}{M}$  
-- Initial capital: $S_0 + m$  
-- New spot price: $S_1$  
-- New future price: $F_1$
-
----
-
-##### Step 1: Compute the Margin Shortfall
-
-The trader is short one contract, and the futures price has increased:
-
-$$
-\text{Short leg loss} = F_1 - F_0
-$$
-
-To maintain the position, this amount must be deposited as additional margin:
-
-$$
-\text{Margin shortfall} = F_1 - F_0
-$$
+- $S_0$: initial spot price  
+- $F_0$: initial futures price  
+- $S_1$: current spot price  
+- $F_1$: current futures price  
+- $m = \dfrac{S_0}{M}$: margin required per contract  
+- $C = S_0 + m$: total capital initially allocated to the strategy  
 
 ---
 
-##### Step 2: Sell Fraction $\alpha$ of the Long Side
+#### **Updated Capital After Mark-to-Market**
 
-To avoid external capital injection, the trader sells a fraction $\alpha$ of the long position at price $S_1$. The proceeds are used to meet the margin shortfall:
-
-$$
-\alpha \cdot S_1 = F_1 - F_0
-$$
-
-Solving for $\alpha$:
+The mark-to-market (MTM) value change on the futures leg is:
 
 $$
-\alpha = \frac{F_1 - F_0}{S_1}
+\Delta F = F_1 - F_0
 $$
 
-This is the **minimum fraction of the long leg** that must be liquidated to maintain the short.
+This is **positive** if the futures price increased (a loss on the short), and **negative** if the futures price decreased (a gain on the short).
 
----
-
-##### Step 3: Adjusted Return
-
-Originally, the strategy expected a final payoff of:
+The updated available capital becomes:
 
 $$
-\text{Gain}_{\text{original}} = 1 \cdot (F_0 + m)
-$$
-
-But now, with only $(1 - \alpha)$ contracts remaining, the payoff becomes:
-
-$$
-\text{Gain}_{\text{adjusted}} = (1 - \alpha) \cdot (F_0 + m)
-$$
-
-So the effective return is diluted due to the **forced deleveraging** under MTM pressure. Let the initial capital deployed be:
-
-$$
-\text{Capital}_{\text{initial}} = S_0 + m
-$$
-
-Then:
-
-- **Original return (no path dependency):**
-
-$$
-r_{\text{original}} = \frac{F_0 + m}{S_0 + m} - 1
-$$
-
-- **Diluted return (after selling $\alpha$ of the long leg):**
-
-$$
-r_{\text{diluted}} = \frac{(1 - \alpha)(F_0 + m)}{S_0 + m} - 1
-$$
-
-This shows how even a profitable spread can underperform due to forced deleveraging from mark-to-market losses on the short leg.
-
-#### **Scenario 2: General Price Levels Fall**
-
-When general price levels fall — i.e., $S_1 < S_0$ and $F_1 < F_0$ — the **short leg gains value**, and margin collateral is released. This **freed capital** can be used to scale up the strategy. Assume:
-
-- Original position: 1 contract per leg  
-- Margin per contract: $m = \frac{S_0}{M}$  
-- Capital per added contract:
-  - Buy long leg: $\alpha \cdot S_1$
-  - Margin for both legs: $ \cdot \alpha \cdot m =  \cdot \alpha \cdot \frac{S_0}{M}$
-- Total capital required per added pair:  
-  $$\alpha S_1 + \alpha \cdot \frac{S_0}{M}$$
-
----
-
-##### Step 1: Freed Capital
-
-The gain on the short leg is:
-
-$$
-\text{Margin surplus} = F_0 - F_1
-$$
-
-This surplus is assumed fully reusable.
-
----
-
-##### Step 2: Solve for $\alpha$
-
-We use the freed margin to fund new contracts:
-
-$$
-F_0 - F_1 = \alpha \cdot S_1 + \alpha \cdot \frac{S_0}{M}
-$$
-
-Solve for $\alpha$:
-
-$$
-\alpha = \frac{F_0 - F_1}{S_1 +  \cdot \frac{S_0}{M}}
-$$
-
-This is the number of **additional contracts** that can be opened with the cash released from MTM gains on the short leg. 
-
----
-
-##### Step 3: Adjusted Gain
-
-The final number of contracts is:
-
-$$
-1 + \alpha
-$$
-
-Total payoff becomes:
-
-$$
-\text{Gain}_{\text{adjusted}} = (1 + \alpha)(F_0 + m)
+C_{\text{after}} = S_1 + m - \Delta F = S_1 + m - (F_1 - F_0)
 $$
 
 ---
 
-##### Step 4: Return Comparison
+#### **New Number of Contracts**
 
-Initial capital (same as before):
-
-$$
-\text{Capital}_{\text{initial}} = S_0 + m
-$$
-
-Then:
-
-- **Original return (1 contract):**
+Each unit of the strategy now costs:
 
 $$
-r_{\text{original}} = \frac{F_0 + m}{S_0 + m} - 1
+S_1 + m
 $$
 
-- **Boosted return (after scaling):**
+Let $\alpha$ be the number of contracts that the updated capital can support:
 
 $$
-r_{\text{boosted}} = \frac{(1 + \alpha)(F_0 + m)}{S_0 + m} - 1
+\alpha = \frac{C_{\text{after}}}{S_1 + m} = \frac{S_1 + m - (F_1 - F_0)}{S_1 + m}
 $$
 
-This shows how early MTM profits free up margin that allows **leveraged scaling**, amplifying the effective return. The strategy becomes **convex**: it performs better when prices fall early, even though the long leg is losing money.
+This simplifies to:
 
-### **Summary: Margin Dynamics and Path-Dependent Returns**
+$$
+\boxed{
+\alpha = 1 - \frac{F_1 - F_0}{S_1 + m}
+}
+$$
 
-| Scenario                  | Price Movement     | Margin Effect        | Trader Action              | Return Expression                                                                 | $\alpha$ Expression                                                                 | $\alpha$ Sign |
-|---------------------------|--------------------|-----------------------|----------------------------|------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------|----------------|
-| 1. Price ↑ (Unfavorable)  | $S_1 > S_0$, $F_1 > F_0$ | Margin call on short  | Sell $\alpha$ of long leg  | $r_{\text{diluted}} = \frac{(1 - \alpha)(F_0 + m)}{S_0 + m} - 1$                  | $\alpha = \frac{F_1 - F_0}{S_1}$                                                     | Positive       |
-| 2. Price ↓ (Favorable)    | $S_1 < S_0$, $F_1 < F_0$ | Freed margin from short | Add $\alpha$ new contracts | $r_{\text{boosted}} = \frac{(1 + \alpha)(F_0 + m)}{S_0 + m} - 1$                  | $\alpha = \frac{F_0 - F_1}{S_1 +   \frac{S_0}{M}}$                             | Positive       |
+---
 
+#### **Interpretation**
 
+- The expression $1 - \alpha$ gives the **fractional change in position size**.
+- If $F_1 > F_0$, then $\alpha < 1$ → **some contracts must be liquidated**
+- If $F_1 < F_0$, then $\alpha > 1$ → **position can be scaled up**
+- The sign of $(1 - \alpha)$ is directly determined by the direction of futures price movement.
 
-These outcomes show that while **carry logic is symmetric**, the **realized return is long** in price movements — because of how margin flows alter effective exposure.
-
-
-
-
-
-
-
-
+This shows how mark-to-market effects induce **forced deleveraging** or **capital-free leveraging**, depending on the change in futures price, even if the underlying spread logic remains intact.
 
 
+### **Adjusted Return on Capital**
+
+After resizing the position to $\alpha$ contracts, the final payoff at maturity becomes:
+
+$$
+\text{Payoff}_{\text{final}} = \alpha \cdot (F_0 + m)
+$$
+
+The original capital deployed was:
+
+$$
+C = S_0 + m
+$$
+
+Therefore, the **adjusted return** is:
+
+$$
+\boxed{
+r_{\text{adjusted}} = \frac{\alpha \cdot (F_0 + m)}{S_0 + m} - 1
+}
+$$
+
+Substituting the expression for $\alpha$:
+
+$$
+\alpha = 1 - \frac{F_1 - F_0}{S_1 + m}
+$$
+
+We get:
+
+$$
+r_{\text{adjusted}} = \left(1 - \frac{F_1 - F_0}{S_1 + m} \right) \cdot \frac{F_0 + m}{S_0 + m} - 1
+$$
+
+This expression quantifies how **mark-to-market price movement** impacts the final return — even though the initial strategy logic (buy low, sell high) is unchanged.
+
+- If $F_1 > F_0$ → position is **deleveraged** → return is **diluted**
+- If $F_1 < F_0$ → position is **leveraged up** → return is **amplified**
+
+This is a concrete expression of how **capital constraints** under daily margining introduce **convexity** into realized returns.
+
+
+## Return Dynamics Under Uniform Price Shock
+
+We explore how uniform shocks to spot and futures prices affect the realized return on capital when margin requirements force dynamic position sizing.
+
+Let the initial capital be:
+
+$$
+C = S_0 + m \quad \text{with} \quad m = M \cdot S_0
+$$
+
+Under a return shock \( r \), we assume:
+
+$$
+S_1 = S_0 (1 + r), \quad F_1 = F_0 (1 + r)
+$$
+
+Then, the **adjusted return on capital** is:
+
+$$
+r_{\text{adjusted}} = \left(1 - \frac{F_1 - F_0}{S_1 + m}\right) \cdot \frac{F_0 + m}{S_0 + m} - 1
+$$
+
+The baseline return when \( r = 0 \) is:
+
+$$
+r_{\text{baseline}} = \frac{F_0 + m}{S_0 + m} - 1
+$$
+
+
+
+
+```{python}
+# Import packages
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Parameters
+S0 = 100
+F0 = 105
+M = 0.1
+m = M * S0
+
+# Shock range
+r_vals = np.linspace(-0.3, 0.3, 200)  # -30% to +30%
+
+# Post-shock values
+S1 = S0 * (1 + r_vals)
+F1 = F0 * (1 + r_vals)
+
+# Adjusted return computation
+alpha = 1 - (F1 - F0) / (S1 + m)
+r_adjusted = (alpha * (F0 + m) / (S0 + m)) - 1
+
+# Baseline return
+r_baseline = (F0 + m) / (S0 + m) - 1
+
+# Plotting
+plt.figure(figsize=(8, 5))
+plt.plot(r_vals, r_adjusted, label=r'$r_{\mathrm{adjusted}}$', linewidth=2)
+plt.axhline(y=r_baseline, color='gray', linestyle='--', label=r'$r_{\mathrm{baseline}}$')
+plt.axvline(x=0, color='black', linestyle=':')
+plt.xlabel('Return Shock $r$')
+plt.ylabel('Adjusted Return on Capital')
+plt.title('Impact of Uniform Price Shock on Return')
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+
+
+
+
+ 
+
+
+
+
+```
+
+## **Managing Margin-Induced Convexity: Hedging with Spot**
+
+On paper, the classic calendar spread strategy appears risk-free — the profit is “locked in” via the forward curve. However, in practice, **daily margining introduces path dependency**. If the general price level rises, the **short futures leg loses value**, triggering margin calls and forcing **liquidation** of part of the long position.
+
+This causes the strategy to behave like it's **short in the price level $r$**: upward moves reduce return. The realized P&L becomes **concave** even when the theoretical spread remains unchanged.
+
+---
+
+### **Risk Management via Spot Allocation**
+
+To manage this convexity, one simple hedge is to **hold a small spot position** alongside the calendar spread.
+
+Let:
+
+- $C = S_0 + m$: total capital  
+- $\beta \in [0, 1]$: fraction of capital allocated to spot  
+- $(1 - \beta) \cdot C$: capital deployed in the calendar spread  
+- $\beta \cdot C$: capital held in spot
+
+---
+
+### **Returns on Each Leg**
+
+- The calendar spread grows at rate $r_{\text{adjusted}}$  
+- The spot grows at rate $r$
+
+Then the total final value is:
+
+$$
+V_{\text{final}} = (1 - \beta)C(1 + r_{\text{adjusted}}) + \beta C(1 + r)
+$$
+
+Divide by initial capital $C$ to get the total portfolio return:
+
+$$
+\boxed{
+r_{\text{hedged}} = (1 - \beta)(1 + r_{\text{adjusted}}) + \beta(1 + r) - 1
+}
+$$
+
+This shows that the **hedged return** is a convex combination of the risky strategy and the linear spot move. It **smooths drawdowns** when the market moves against the short leg, reducing the impact of margin-induced deleveraging.
+
+
+
+## **Visualizing the Impact of Spot Hedging on Return Convexity**
+
+The plot below compares two versions of the adjusted return:
+
+- **Unhedged return** ($\beta = 0$): exposed to margin-induced deleveraging
+- **Hedged return** ($\beta = 50\%$): partially protected by holding spot
+
+This shows how allocating part of capital to spot can **reduce concavity** in realized returns by mitigating forced position adjustments during price rises.
+
+```{python}
+import numpy as np
+import plotly.graph_objects as go
+
+# Parameters
+S0 = 100
+F0 = 110
+M = 10
+m = S0 / M
+C = S0 + m
+
+# Shock range
+r = np.linspace(-0.2, 0.2, 200)
+S1 = S0 * (1 + r)
+F1 = F0 * (1 + r)
+
+# Unhedged return (beta = 0)
+r_adjusted = ((1 - (F1 - F0) / (S1 + m)) * (F0 + m)) / (S0 + m) - 1
+
+# Precompute hedged returns for various beta values
+beta_values = [0.0, 0.25, 0.5, 0.75, 1.0]
+hedged_returns = [
+    (1 - beta) * (1 + r_adjusted) + beta * (1 + r) - 1 for beta in beta_values
+]
+
+# Create plotly traces
+fig = go.Figure()
+
+# Add unhedged trace
+fig.add_trace(go.Scatter(x=r*100, y=r_adjusted*100,
+                         mode='lines', name='Unhedged Return (β = 0%)'))
+
+# Add hedged traces (only show β=50% by default)
+for i, beta in enumerate(beta_values):
+    fig.add_trace(go.Scatter(
+        x=r*100, y=hedged_returns[i]*100,
+        mode='lines',
+        name=f'Hedged Return (β = {int(beta*100)}%)',
+        visible=(i == 2)  # Only show β=50% initially
+    ))
+
+# Dropdown menu logic
+dropdown_buttons = [
+    {
+        "label": f"β = {int(beta*100)}%",
+        "method": "update",
+        "args": [
+            {"visible": [True] + [j == i for j in range(len(beta_values))]},
+            {"title": f"Hedged vs. Unhedged Adjusted Return (β = {int(beta*100)}%)"}
+        ]
+    }
+    for i, beta in enumerate(beta_values)
+]
+
+# Layout and dropdown
+fig.update_layout(
+    updatemenus=[{
+        "buttons": dropdown_buttons,
+        "direction": "down",
+        "showactive": True,
+        "x": 0.5,
+        "xanchor": "left",
+        "y": 1.15,
+        "yanchor": "top"
+    }],
+    title="Hedged vs. Unhedged Adjusted Return (β = 50%)",
+    xaxis_title="Return Shock (%)",
+    yaxis_title="Portfolio Return (%)",
+    legend_title="Strategy",
+    height=500
+) 
+
+fig.show()     
+```
 ## **Visualizing the Forward Curve**
 
 ```{python}
