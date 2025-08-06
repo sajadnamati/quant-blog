@@ -385,9 +385,9 @@ fig.update_layout(
             "buttons": dropdown_buttons,
             "direction": "down",
             "showactive": True,
-            "x": 0.5,
+            "x": 1.2,
             "xanchor": "center",
-            "y": -0.25,  # BELOW the chart
+            "y": 0.5,  # BELOW the chart
             "yanchor": "top"
         }
     ],
@@ -400,6 +400,19 @@ fig.update_layout(
 
 fig.show()     
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## **Visualizing the Forward Curve**
 
 ```{python}
